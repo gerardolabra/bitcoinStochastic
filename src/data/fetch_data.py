@@ -23,11 +23,21 @@ def fetch_btc_data(symbol='BTCUSDT', interval='1d', start_str='1 Jan 2017'):
         'X-MBX-APIKEY': API_KEY
     }
     
-    response = requests.get(base_url + endpoint, headers=headers, params=params)
-    data = response.json()
+    all_data = []
+    while True:
+        response = requests.get(base_url + endpoint, headers=headers, params=params)
+        data = response.json()
+        
+        if not data:
+            break
+        
+        all_data.extend(data)
+        
+        # Update startTime to the last timestamp + 1 to avoid overlapping
+        params['startTime'] = data[-1][0] + 1
     
     # Convert data to DataFrame
-    df = pd.DataFrame(data, columns=[
+    df = pd.DataFrame(all_data, columns=[
         'timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time',
         'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume',
         'taker_buy_quote_asset_volume', 'ignore'
